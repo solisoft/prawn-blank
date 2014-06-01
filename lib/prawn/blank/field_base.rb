@@ -1,5 +1,5 @@
 # -*- encoding : utf-8 -*-
-class Prawn::Blank::FieldBase < Prawn::Core::Reference
+class Prawn::Blank::FieldBase < PDF::Core::Reference
   
   
   # see pdf reference for documentation

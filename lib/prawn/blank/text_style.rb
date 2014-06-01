@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 module Prawn::Blank
-  class TextStyle < Prawn::Core::LiteralString
+  class TextStyle < PDF::Core::LiteralString
     
     attr_reader :font, :color, :size
     

@@ -151,7 +151,7 @@ module Prawn::Blank
             document.line_width(border_style[:W])
             rx = (width / 2.0)
             ry = (height / 2.0)
-            document.fill_and_stroke_ellipse_at([rx,ry], rx-border_style[:W], ry-border_style[:W])
+            document.fill_and_stroke_ellipse([rx,ry], rx-border_style[:W], ry-border_style[:W])
           end
         end
       end
@@ -180,10 +180,10 @@ module Prawn::Blank
             document.line_width(border_style[:W])
             rx = (width / 2.0)
             ry = (height / 2.0)
-            document.fill_and_stroke_ellipse_at([rx,ry], rx-border_style[:W], ry-border_style[:W])
+            document.fill_and_stroke_ellipse([rx,ry], rx-border_style[:W], ry-border_style[:W])
             
             document.fill_color( *denormalize_color(style[:BC]) )
-            document.fill_ellipse_at([rx,ry], rx-border_style[:W]-2, ry-border_style[:W]-2)
+            document.fill_ellipse([rx,ry], rx-border_style[:W]-2, ry-border_style[:W]-2)
           end
         end
       end
