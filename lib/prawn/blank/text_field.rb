@@ -11,8 +11,6 @@ class Prawn::Blank::TextField < Prawn::Blank::Field
     @data[:AP] = { N: app.text_field(self) }
     @data[:AS] = :N
 
-    # document.acroform.add_resources(da.data[:Resources])
-
     nil
   end
 

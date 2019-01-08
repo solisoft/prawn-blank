@@ -67,18 +67,22 @@ module Prawn
     def add_field(field)
       field.finalize(self)
       field.page = page.dictionary
+
+      # Add field to AcroForm hash
       acroform.add_field(field) if field.root?
-      page.dictionary.data[:Annots] ||= []
-      page.dictionary.data[:Annots] << field
+
+      # Add field to annots
+      state.page.dictionary.data[:Annots] ||= []
+      state.page.dictionary.data[:Annots] << field
       field
     end
   end
 
-  def TextStyle(*args)
+  def self.TextStyle(*args)
     Prawn::Blank::TextStyle.new(*args)
   end
 
-  def BorderStyle(_doc, width, style = :S)
+  def self.BorderStyle(_doc, width, style = :S)
     {
       W: width,
       Type: :Border,
@@ -86,7 +90,7 @@ module Prawn
     }
   end
 
-  def ColorStyle(doc, fill, stroke)
+  def self.ColorStyle(doc, fill, stroke)
     {
       BC: doc.send(:normalize_color, stroke),
       BG: doc.send(:normalize_color, fill)
