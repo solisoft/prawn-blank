@@ -1,0 +1,44 @@
+AllCops:
+  TargetRubyVersion: 2.3
+
+Naming/FileName:
+  Enabled: false
+
+Naming/MethodName:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Naming/UncommunicativeMethodParamName:
+  Enabled: false
+
+Style/EvalWithLocation:
+  Enabled: false

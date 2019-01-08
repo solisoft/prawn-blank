@@ -1,2 +1,3 @@
-# -*- encoding : utf-8 -*-
-require "prawn/blank"
+# frozen_string_literal: true
+
+require 'prawn/blank'

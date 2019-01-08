@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rubygems'
 require 'rake'
 require 'rake/gempackagetask'
@@ -6,9 +8,9 @@ require 'spec/version'
 require 'spec/rake/spectask'
 require 'spec/ruby'
 
-task :default => [:package] 
+task default: [:package]
 
-spec = Gem::Specification.load "prawn-blank.gemspec"
+spec = Gem::Specification.load 'prawn-blank.gemspec'
 Rake::GemPackageTask.new(spec) do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
@@ -25,9 +27,7 @@ Spec::Rake::SpecTask.new('spec') do |t|
   t.spec_files = FileList['spec/**/*.rb']
 end
 
-
-
-desc "Look for TODO and FIXME tags in the code"
+desc 'Look for TODO and FIXME tags in the code'
 task :todo do
-  egrep /(FIXME|TODO|TBD)/
+  egrep(/(FIXME|TODO|TBD)/)
 end
