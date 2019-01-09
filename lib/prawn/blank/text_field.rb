@@ -3,13 +3,16 @@
 class Prawn::Blank::TextField < Prawn::Blank::Field
   # attr_accessor :text_style
 
-  def finalize(document)
+  def finalize(_document)
     # render this field
 
-    app = appearance || document.default_appearance
+    # app = appearance || document.default_appearance
 
-    @data[:AP] = { N: app.text_field(self) }
-    @data[:AS] = :N
+    # @data[:AP] = {
+    #   N: app.text_field(self, 'ffffcc'),
+    #   R: app.text_field(self, 'ccffff')
+    # }
+    # @data[:AS] = :Off
 
     nil
   end

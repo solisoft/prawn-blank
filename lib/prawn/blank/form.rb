@@ -5,6 +5,7 @@ class Prawn::Blank::Form < Hash
     super()
     self[:DR] = {}
     self[:Fields] = []
+    self[:NeedAppearances] = true
   end
 
   def add_resource(type, name, dict)

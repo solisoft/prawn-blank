@@ -13,11 +13,9 @@ module Prawn::Blank
     attr_reader :document
 
     STYLE = {
-
       border_color: '202020',
       background_color: 'ffffff',
       border_width: 1
-
     }.freeze
 
     def initialize(document)
@@ -27,8 +25,10 @@ module Prawn::Blank
     end
 
     def render(dict)
-      dict = { Subtype: :Form,
-               Resources: { ProcSet: %i[PDF ImageC ImageI ImageB] } }.merge(dict)
+      dict = {
+        Subtype: :Form,
+        Resources: { ProcSet: %i[PDF ImageC ImageI ImageB] }
+      }.merge(dict)
 
       result = @document.ref!(dict)
       @document.state.page.stamp_stream(result) do
@@ -44,7 +44,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 1)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
       cached(:checkbox_off, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -68,7 +68,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 1)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
       cached(:checkbox_off, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -92,7 +92,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 1)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
       cached(:checkbox_on, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -118,7 +118,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 1)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
       cached(:radio_off, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -143,7 +143,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 1)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
       cached(:radio_on, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -165,46 +165,53 @@ module Prawn::Blank
     alias radio_on_over radio_on
     alias radio_on_down radio_on
 
-    def text_field(element)
-      text_style = element.text_style ||= Prawn::TextStyle(@document, 'Helvetica', 9, '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 1)
+    def text_field(element, bgcolor = 'ffffff')
+      text_style = element.text_style ||= Prawn::TextStyle(
+        @document, 'Helvetica', :normal, 9, '000000'
+      )
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
 
       element.width = 100 if !element.width || (element.width <= 0)
       element.height = text_style.size + 6 + 2 * border_style[:W] if !element.height || (element.height <= 0)
       width = element.width
       height = element.height
-      style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
+      style = Prawn::ColorStyle(@document, bgcolor, '000000')
       multiline = element.multiline
       value = element.value
-      cached(:text_field, width, height, style, border_style, text_style, multiline, value) do
-        render(BBox: [0, 0, width, height]) do
-          document.canvas do
-            document.save_font do
-              # render background
-              document.fill_color(*denormalize_color(style[:BG]))
-              document.stroke_color(*denormalize_color(style[:BC]))
-              document.line_width(border_style[:W])
+      # cached(:text_field, width, height, style, border_style, text_style, multiline, value) do
+      render(BBox: [0, 0, width, height]) do
+        document.canvas do
+          document.save_font do
+            # render background
+            document.fill_color(*denormalize_color(style[:BG]))
+            document.stroke_color(*denormalize_color(style[:BC]))
+            document.line_width(border_style[:W])
+            if border_style[:W] > 0
               bw = border_style[:W] / 2.0
               document.fill_and_stroke_rectangle(
                 [bw, height - bw], width - border_style[:W], height - border_style[:W]
               )
-              if text_style
-                document.font(text_style.font, size: text_style.size)
-                document.fill_color(*text_style.color)
-              end
-              if value
-                document.draw_text(
-                  value,
-                  at: [
-                    border_style[:W] + 1,
-                    [1, height - document.font_size - border_style[:W] - 1.5].max
-                  ]
-                )
-              end
+            else
+              document.fill_rectangle(
+                [0, height], width, height
+              )
+            end
+            document.font(text_style.font, size: text_style.size, style: text_style.style)
+            document.fill_color(*text_style.color)
+
+            if value
+              document.draw_text(
+                value,
+                at: [
+                  0,
+                  [1, height - document.font_size - 1.5].max
+                ]
+              )
             end
           end
         end
       end
+      # end
     end
 
     protected

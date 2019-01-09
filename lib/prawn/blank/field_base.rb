@@ -162,7 +162,7 @@ EVAL
   end
 
   def height=(h)
-    rect[3] = rect[1] + h
+    rect[3] = rect[1] - h
   end
 
   def at
