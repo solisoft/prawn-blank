@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Prawn::Blank::Checkbox < Prawn::Blank::Field
-  attr_writer :check_string, :check_style
+  attr_accessor :check_string, :check_style
 
   def initialize(id, *_args)
     super
