@@ -92,7 +92,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 4)
       cached(:checkbox_on, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -102,8 +102,26 @@ module Prawn::Blank
             document.line_width(border_style[:W])
             bw = border_style[:W] / 2.0
             document.fill_and_stroke_rectangle([bw, height - bw], width - border_style[:W], height - border_style[:W])
-            document.stroke_line(0, 0, width, height)
-            document.stroke_line(width, 0, 0, height)
+
+            # document.stroke_line(0, 0, width, height)
+            # document.stroke_line(width, 0, 0, height)
+
+            check_style = element.check_style ||= Prawn::TextStyle(
+              @document, 'DejaVuSans', :normal, 10, '444444'
+            )
+            document.font(check_style.font, size: check_style.size, style: check_style.style)
+
+            document.text_box(
+              element.check_string,
+              at: [0, 0],
+              width: width,
+              height: height,
+              valign: :center,
+              align: :center,
+              overflow: :shrink_to_fit,
+              min_font_size: 1,
+              single_line: true
+            )
           end
         end
       end
@@ -143,7 +161,7 @@ module Prawn::Blank
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
+      border_style = element.border_style ||= Prawn::BorderStyle(@document, 4)
       cached(:radio_on, width, height, style, border_style) do
         render(BBox: [0, 0, width, height]) do
           document.canvas do
@@ -165,7 +183,8 @@ module Prawn::Blank
     alias radio_on_over radio_on
     alias radio_on_down radio_on
 
-    def text_field(element, bgcolor = 'ffffff')
+    # For DA instead of AP
+    def text_field_default_appearance(element)
       text_style = element.text_style ||= Prawn::TextStyle(
         @document, 'Helvetica', :normal, 9, '000000'
       )
@@ -175,13 +194,18 @@ module Prawn::Blank
       element.height = text_style.size + 6 + 2 * border_style[:W] if !element.height || (element.height <= 0)
       width = element.width
       height = element.height
-      style = Prawn::ColorStyle(@document, bgcolor, '000000')
+      style = Prawn::ColorStyle(@document, 'ffffff', '000000')
       multiline = element.multiline
       value = element.value
+
       # cached(:text_field, width, height, style, border_style, text_style, multiline, value) do
       render(BBox: [0, 0, width, height]) do
         document.canvas do
           document.save_font do
+            # resources = (document.page.dictionary.data[:Resources] ||= {})
+            # resources[:Font] ||= []
+            # resources[:Font] << pdf.find_font('Helvetica')
+
             # render background
             document.fill_color(*denormalize_color(style[:BG]))
             document.stroke_color(*denormalize_color(style[:BC]))

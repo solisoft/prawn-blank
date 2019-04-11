@@ -2,9 +2,10 @@
 
 module Prawn::Blank
   class TextStyle < PDF::Core::LiteralString
-    attr_reader :font, :color, :size, :style
+    attr_reader :document, :font, :font_subset, :color, :size, :style
 
     def initialize(document, font, style, size, color, font_subset = 0)
+      @document = document
       @font = font
       @font_subset = font_subset
       @size = size
@@ -12,9 +13,21 @@ module Prawn::Blank
       @color = color
       @color = [@color] unless color.is_a? Array
       super(
-        "/#{document.font(font, style: style).identifier_for(font_subset)} #{size} " \
-        "Tf #{document.send(:color_to_s, *@color)} #{color_cmd(@color)}"
+        "/#{font_identifier} #{size} Tf " \
+        "#{document.send(:color_to_s, *@color)} #{color_cmd(@color)}"
       )
+      # super(
+      #   "/CoBo #{size} Tf " \
+      #   "#{document.send(:color_to_s, *@color)} #{color_cmd(@color)}"
+      # )
+    end
+
+    def font_instance
+      document.font(font, style: style)
+    end
+
+    def font_identifier
+      font_instance.identifier_for(font_subset)
     end
 
     def color_cmd(color)

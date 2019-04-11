@@ -1,18 +1,26 @@
 # frozen_string_literal: true
 
 class Prawn::Blank::Checkbox < Prawn::Blank::Field
+  attr_writer :check_string, :check_style
+
+  def initialize(id, *_args)
+    super
+    @check_string = '&#10004;'
+  end
+
   def checked
     @data[:AS] == :Yes
   end
 
   def checked=(value)
-    if value
-      @data[:AS] = :Yes
-      @data[:V] = :Yes
-    else
-      @data[:AS] = :Off
-      @data[:V] = :Off
-    end
+    @data[:V] =
+      if value
+        @data[:AS] = :Yes
+        :Yes
+      else
+        @data[:AS] = :Off
+        :Off
+      end
   end
 
   def finalize(document)
