@@ -12,7 +12,7 @@ class Prawn::Blank::FieldBase < PDF::Core::Reference
     password: 14,
 
     # for buttons
-    no_toggle_to_off: 15
+    no_toggle_to_off: 15,
   }.freeze
 
   class << self
@@ -43,7 +43,7 @@ class Prawn::Blank::FieldBase < PDF::Core::Reference
 EVAL
     end
 
-    def flag_accessor(name, bit, flag_name = 'flags')
+    def flag_accessor(name, bit, flag_name = "flags")
       mask = (1 << (bit - 1))
 
       class_eval <<EVAL
@@ -75,16 +75,17 @@ EVAL
   field_attr_accessor :value, :V
   field_attr_accessor :default_value, :DV
   field_attr_accessor :text_style, :DA
+  field_attr_accessor :alignment, :Q
   field_attr_accessor :_app, :AP
   field_attr_accessor :border_style, :BS
   field_attr_accessor :style, :MK
   field_attr_accessor :page, :P
   field_attr_accessor :options, :Opt
 
-  flag_accessor :invisible, 1, 'aflags'
-  flag_accessor :hidden, 2, 'aflags'
-  flag_accessor :print, 3, 'aflags'
-  flag_accessor :no_zoom, 4, 'aflags'
+  flag_accessor :invisible, 1, "aflags"
+  flag_accessor :hidden, 2, "aflags"
+  flag_accessor :print, 3, "aflags"
+  flag_accessor :no_zoom, 4, "aflags"
 
   flag_accessor :readonly, 1
   flag_accessor :required, 2
@@ -175,11 +176,11 @@ EVAL
   end
 
   def validate!
-    raise 'Blank: Type must be :Annot ' if data[:Type] != :Annot
-    raise 'Blank: Subtype must be :Annot ' if data[:Subtype] != :Widget
+    raise "Blank: Type must be :Annot " if data[:Type] != :Annot
+    raise "Blank: Subtype must be :Annot " if data[:Subtype] != :Widget
 
     if leaf?
-      raise 'Blank: FT ( Field Type ) must be :Btn, :Tx, :Ch or :Sig ' unless %i[Btn Tx Ch Sig].include type
+      raise "Blank: FT ( Field Type ) must be :Btn, :Tx, :Ch or :Sig " unless %i[Btn Tx Ch Sig].include type
     end
   end
 
@@ -204,7 +205,7 @@ EVAL
     {
       Type: :Annot,
       Subtype: :Widget,
-      Rect: [0, 0, 0, 0]
+      Rect: [0, 0, 0, 0],
     }
   end
 end

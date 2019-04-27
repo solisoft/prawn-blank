@@ -1,20 +1,21 @@
 # frozen_string_literal: true
 
-require 'prawn'
+require "prawn"
+
 module Prawn
   module Blank
-    autoload :Form, 'prawn/blank/form'
-    autoload :Style, 'prawn/blank/style'
-    autoload :FieldBase, 'prawn/blank/field_base'
-    autoload :Field, 'prawn/blank/field'
-    autoload :Appearance, 'prawn/blank/appearance'
-    autoload :TextField, 'prawn/blank/text_field'
-    autoload :Checkbox, 'prawn/blank/checkbox'
-    autoload :Select, 'prawn/blank/select'
-    autoload :Combo, 'prawn/blank/combo'
-    autoload :RadioGroup, 'prawn/blank/radio_group'
-    autoload :Radio, 'prawn/blank/radio'
-    autoload :TextStyle, 'prawn/blank/text_style'
+    autoload :Form, "prawn/blank/form"
+    autoload :Style, "prawn/blank/style"
+    autoload :FieldBase, "prawn/blank/field_base"
+    autoload :Field, "prawn/blank/field"
+    autoload :Appearance, "prawn/blank/appearance"
+    autoload :TextField, "prawn/blank/text_field"
+    autoload :Checkbox, "prawn/blank/checkbox"
+    autoload :Select, "prawn/blank/select"
+    autoload :Combo, "prawn/blank/combo"
+    autoload :RadioGroup, "prawn/blank/radio_group"
+    autoload :Radio, "prawn/blank/radio"
+    autoload :TextStyle, "prawn/blank/text_style"
 
     def text_field(options = {})
       options[:at] = send(:map_to_absolute, options[:at]) if options[:at]
@@ -85,16 +86,17 @@ module Prawn
     {
       W: width,
       Type: :Border,
-      S: style
+      S: style,
     }
   end
 
   def self.ColorStyle(doc, fill, stroke)
     {
       BC: doc.send(:normalize_color, stroke),
-      BG: doc.send(:normalize_color, fill)
+      BG: doc.send(:normalize_color, fill),
     }
   end
 end
-require 'prawn/document'
+
+require "prawn/document"
 Prawn::Document.extensions << Prawn::Blank
