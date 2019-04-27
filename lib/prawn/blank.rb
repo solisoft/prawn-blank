@@ -18,7 +18,6 @@ module Prawn
 
     def text_field(options = {})
       options[:at] = send(:map_to_absolute, options[:at]) if options[:at]
-      # puts self.bounds.inspect
       f = TextField.create(self, options)
       yield(f) if block_given?
       add_field(f)

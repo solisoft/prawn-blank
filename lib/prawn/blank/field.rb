@@ -6,8 +6,6 @@ class Prawn::Blank::Field < Prawn::Blank::FieldBase
   def get_dict
     base = super
     if appearance
-      puts "calling #get_dict with appearance"
-
       app = Prawn::Blank::Appearance.cast(appearance)
 
       app.font.instance_eval do
