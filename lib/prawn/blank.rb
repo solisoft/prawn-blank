@@ -73,7 +73,13 @@ module Prawn
 
       # Add field to annots
       state.page.dictionary.data[:Annots] ||= []
-      state.page.dictionary.data[:Annots] << field
+      
+      if state.page.dictionary.data[:Annots].is_a?(PDF::Core::Reference)
+        state.page.dictionary.data[:Annots].data << field
+      else
+        state.page.dictionary.data[:Annots] << field
+      end
+
       field
     end
   end
