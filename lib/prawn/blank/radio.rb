@@ -9,18 +9,19 @@ module Prawn::Blank
 
       app = appearance || document.default_appearance
 
+      radio_index = (parent.children.length - 1).to_s
+
       @data[:AP] =
         if check_string
-          { N: { Off: app.checkbox_off(self), Yes: app.checkbox_on(self) },
-            R: { Off: app.checkbox_off_over(self), Yes: app.checkbox_on_over(self) },
-            D: { Off: app.checkbox_off_down(self), Yes: app.checkbox_on_down(self) } }
+          { N: { :Off => app.checkbox_off(self), radio_index => app.checkbox_on(self) },
+            R: { :Off => app.checkbox_off_over(self), radio_index => app.checkbox_on_over(self) },
+            D: { :Off => app.checkbox_off_down(self), radio_index => app.checkbox_on_down(self) } }
         else
-          { N: { :Off => app.radio_off(self), @value => app.radio_on(self) },
-            R: { :Off => app.radio_off_over(self), @value => app.radio_on_over(self) },
-            D: { :Off => app.radio_off_down(self), @value => app.radio_on_down(self) } }
+          { N: { :Off => app.radio_off(self), radio_index => app.radio_on(self) },
+            R: { :Off => app.radio_off_over(self), radio_index => app.radio_on_over(self) },
+            D: { :Off => app.radio_off_down(self), radio_index => app.radio_on_down(self) } }
         end
-      @data[:AS] = parent.value == @value ? @value : :Off
-      @data[:V] = @value
+      @data[:AS] = radio_index === @value ? radio_index.to_sym : :Off
       nil
     end
 
