@@ -64,8 +64,83 @@ module Prawn
 
     protected
 
+    def handle_page_rotation(field)
+      page_rotation = get_page_rotation(self.page)
+      return if page_rotation == 0
+
+      adjust_mk_rotate_on_page_rotation(field, page_rotation)
+      adjust_rect_on_page_rotation(field, page_rotation, self.page)
+    end
+
+    def adjust_mk_rotate_on_page_rotation(field, page_rotation)
+      field.data[:MK] ||= {}
+      field.data[:MK][:R] = page_rotation
+    end
+
+    def get_actual_page_dimensions(page)
+      page_dimensions = page.dimensions
+      page_width = page_dimensions[2] - page_dimensions[0]
+      page_height = page_dimensions[3] - page_dimensions[1]
+
+      page_rotation = get_page_rotation(page)
+
+      if [90, 270].include?(page_rotation)
+        swap_width  = page_width
+
+        page_width  = page_height
+        page_height = swap_width
+      end
+
+      [page_width, page_height]
+    end
+
+    def adjust_rect_on_page_rotation(field, rotation, page)
+      page_width, page_height = get_actual_page_dimensions(page)
+
+      left, bottom, right, top = field.rect
+
+      case rotation
+      when 90
+        # origin is at top/left
+        new_left   = page_height - top
+        new_bottom = left
+        new_right  = page_height - bottom
+        new_top    = right
+
+        field.rect = [new_left, new_bottom, new_right, new_top]
+      when 180
+        # origin is at top/right
+        new_left   = page_width  - right
+        new_bottom = page_height - top
+        new_right  = page_width  - left
+        new_top    = page_height - bottom
+
+        field.rect = [new_left, new_bottom, new_right, new_top]
+      when 270
+        # origin is at bottom/right
+        new_left   = bottom
+        new_bottom = page_width - right
+        new_right  = top
+        new_top    = page_width - left
+
+        field.rect = [new_left, new_bottom, new_right, new_top]
+      else
+        raise "Don't know how to handle a page rotation of #{rotation} degrees!"
+      end
+    end
+
+    def get_page_rotation(page)
+      page_rotation = (page.dictionary.try(:data).try(:[], :Rotate) || 0).to_i
+      # 360 is a valid page rotation
+      page_rotation %= 360
+      page_rotation
+    end
+
+
     def add_field(field)
       field.finalize(self)
+      handle_page_rotation(field)
+
       field.page = page.dictionary
 
       # Add field to AcroForm hash
