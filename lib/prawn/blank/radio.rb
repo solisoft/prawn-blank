@@ -22,6 +22,15 @@ module Prawn::Blank
             D: { :Off => app.radio_off_down(self), radio_index => app.radio_on_down(self) } }
         end
       @data[:AS] = radio_index === @value ? radio_index.to_sym : :Off
+
+      if check_string
+        # right now, Adobe is replacing our appearance AP content stream with its own defaults
+        # and uses ZaDB (ZapfDingBats) for its font. Using '4', which corresponds to 
+        # checkmark for that font would render the radio button as a checkmark
+        @data[:MK] = @data[:MK] || {}
+        @data[:MK][:CA] = PDF::Core::LiteralString.new('4')
+      end
+
       nil
     end
 
