@@ -6,6 +6,9 @@ module Prawn::Blank
       # @data[:DA] = "/F1.0 9 Tf 0.000 1.000 0.000 rg"
       # @data[:V] = :Off
       @data.delete :Rect
+
+      @data.delete :Type
+      @data.delete :Subtype
     end
 
     protected
