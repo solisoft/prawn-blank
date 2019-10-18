@@ -10,9 +10,22 @@ class Prawn::Blank::FieldBase < PDF::Core::Reference
     # for text fields
     multiline: 13,
     password: 14,
+    file_select: 21,
+    do_not_spell_check: 23,
+    do_not_scroll: 24,
+    comb: 25,
+    rich_text: 26,
 
     # for buttons
     no_toggle_to_off: 15,
+
+    radio: 16,
+    pushbutton: 17,
+    combo: 18,
+    edit: 19,
+    sort: 20,
+    radios_in_unison: 26,
+    commit_on_select_change: 27
   }.freeze
 
   class << self
@@ -81,6 +94,7 @@ EVAL
   field_attr_accessor :style, :MK
   field_attr_accessor :page, :P
   field_attr_accessor :options, :Opt
+  field_attr_accessor :max_length, :MaxLen
 
   flag_accessor :invisible, 1, "aflags"
   flag_accessor :hidden, 2, "aflags"
@@ -94,6 +108,7 @@ EVAL
   flag_accessor :multiline, 13
   flag_accessor :password, 14
   flag_accessor :no_toggle_to_off, 15
+  flag_accessor :comb, 25
 
   flag_accessor :combo, 18
   flag_accessor :editable, 19
