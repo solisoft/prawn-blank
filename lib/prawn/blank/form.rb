@@ -2,7 +2,13 @@
 
 class Prawn::Blank::Form < Hash
   def initialize(document)
-    super()
+    super
+    # Variable text fields should not have appearance streams.
+    # See the "Variable Text" section in the PDF reference.
+    # We need to set NeedAppearances to true to render filled out text fields, and
+    # update the appearances after user input.
+    self[:NeedAppearances] = true
+
     self[:Fields] = []
     zadb_ref = document.ref!(
       Name: :ZaDb,
