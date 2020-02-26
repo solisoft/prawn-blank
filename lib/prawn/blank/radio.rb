@@ -4,6 +4,16 @@ module Prawn::Blank
   class Radio < Field
     attr_accessor :check_string, :check_style, :value
 
+    def grouped_checkboxes=(value)
+      if value
+        # We must remove the /FT /Btn attribute from kids in a checkbox group. Otherwise,
+        # IE Edge will treat them as independent checkboxes.
+        data.delete :FT
+        # Also need to remove the radio button flag
+        data.delete :Ff
+      end
+    end
+
     def finalize(document)
       # render this field
 
@@ -33,10 +43,10 @@ module Prawn::Blank
       nil
     end
 
-    protected
+    # protected
 
-    def default_options
-      super.merge(FT: :Btn, Ff: 32_768)
-    end
+    # def default_options
+    #   super.merge(Ff: 32_768) # FT: :Btn,
+    # end
   end
 end

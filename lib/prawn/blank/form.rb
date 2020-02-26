@@ -22,6 +22,10 @@ class Prawn::Blank::Form < Hash
         Helv: helv_ref
       }
     }
+    # Prawn encodes strings by default, and Acrobat Reader doesn't display checkboxes correctly when
+    # the DA string is encoded. The following line would cause this bug:
+    # self[:DA] = '/Helv 0 Tf 0 g')
+    # So we need to wrap this in the LiteralString class to prevent encoding:
     self[:DA] = PDF::Core::LiteralString.new('/Helv 0 Tf 0 g')
   end
 

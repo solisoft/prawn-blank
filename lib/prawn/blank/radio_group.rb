@@ -14,7 +14,7 @@ module Prawn::Blank
     def grouped_checkboxes=(value)
       if value
         # This allows the group of checkboxes to be deselected after one is clicked.
-        self.flags = nil
+        data.delete :Ff
       else
         self.flags = 32_768
       end
