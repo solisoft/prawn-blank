@@ -21,11 +21,13 @@ module Prawn::Blank
     def initialize(document)
       @document = document
       @cache = {}
+      @font_cache = {}
       # @style = STYLE.dup
     end
 
     def render(dict)
       dict = {
+        Type: :XObject,
         Subtype: :Form,
         Resources: { ProcSet: %i[PDF ImageC ImageI ImageB] }
       }.merge(dict)
@@ -62,126 +64,266 @@ module Prawn::Blank
     alias button_over button
     alias button_down button
 
-    def checkbox_off(element)
+    def checkbox_off(element, _cache_key = :checkbox_off, mousedown = false)
       element.width = 10 if !element.width || (element.width <= 0)
       element.height = 10 if !element.height || (element.height <= 0)
       width = element.width
       height = element.height
-      style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
-      cached(:checkbox_off, width, height, style, border_style) do
-        render(BBox: [0, 0, width, height]) do
-          document.canvas do
-            # render background
-            document.fill_color(*denormalize_color(style[:BG]))
-            document.stroke_color(*denormalize_color(style[:BC]))
-            document.line_width(border_style[:W])
-            bw = border_style[:W] / 2.0
-            document.fill_and_stroke_rectangle([bw, height - bw], width - border_style[:W], height - border_style[:W])
-          end
-        end
-      end
+      # style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '888888')
+
+      style = element.style ||= {
+        BC: [0],
+        BG: [1]
+      }
+
+      stream_dict = {
+        BBox: [0, 0, width, height],
+        FormType: 1,
+        Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        Type: :XObject,
+        Subtype: :Form,
+        Resources: {
+          ProcSet: %i[PDF Text]
+        }
+      }
+      stream_ref = document.ref!(stream_dict)
+
+      bg_color = mousedown ? '0.75293' : '1'
+      stream_ref.stream << %(
+#{bg_color} g
+0 0 #{width} #{height} re
+f
+0.5 0.5 #{width - 1} #{height - 1} re
+s
+      )
+      stream_ref
     end
 
     alias checkbox_off_over checkbox_off
-    alias checkbox_off_down checkbox_off
+    # alias checkbox_off_down checkbox_off
+    def checkbox_off_down(element)
+      checkbox_off(element, :checkbox_off_down, :down)
+    end
 
-    def checkbox_on(element)
+    def checkbox_on(element, _cache_key = :checkbox_on, mousedown = false)
       element.width = 10 if !element.width || (element.width <= 0)
       element.height = 10 if !element.height || (element.height <= 0)
       width = element.width
       height = element.height
-      style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 4)
-      cached(:checkbox_on, width, height, style, border_style) do
-        render(BBox: [0, 0, width, height]) do
-          document.canvas do
-            # render background
-            document.fill_color(*denormalize_color(style[:BG]))
-            document.stroke_color(*denormalize_color(style[:BC]))
-            document.line_width(border_style[:W])
-            bw = border_style[:W] / 2.0
-            document.fill_and_stroke_rectangle([bw, height - bw], width - border_style[:W], height - border_style[:W])
+      # style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '888888')
+      # border_style = element.border_style ||= Prawn::BorderStyle(@document, 4)
+      style = element.style ||= {
+        BC: [0],
+        BG: [1]
+      }
 
-            # document.stroke_line(0, 0, width, height)
-            # document.stroke_line(width, 0, 0, height)
-
-            check_style = element.check_style ||= Prawn::TextStyle(
-              @document, 'DejaVuSans', :normal, 10, '444444'
-            )
-            document.font(check_style.font, size: check_style.size, style: check_style.style)
-
-            document.text_box(
-              element.check_string,
-              at: [0, 0],
-              width: width,
-              height: height,
-              valign: :center,
-              align: :center,
-              overflow: :shrink_to_fit,
-              min_font_size: 1,
-              single_line: true
-            )
-          end
-        end
+      # Need ZaDb font alias
+      unless @font_cache[:ZaDb]
+        font_dict = {
+          BaseFont: :ZapfDingbats,
+          Name: :ZaDb,
+          Subtype: :Type1,
+          Type: :Font
+        }
+        @font_cache[:ZaDb] = document.ref!(font_dict)
       end
+
+      stream_dict = {
+        BBox: [0, 0, width, height],
+        FormType: 1,
+        Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        Type: :XObject,
+        Subtype: :Form,
+        Resources: {
+          ProcSet: %i[PDF Text],
+          Font: { ZaDb: @font_cache[:ZaDb] }
+        }
+      }
+
+      stream_ref = document.ref!(stream_dict)
+      document.acroform.add_resources(stream_ref.data[:Resources])
+
+      # Approximate formulas figured out in this spreadsheet:
+      # https://docs.google.com/spreadsheets/d/15QzWSex3xwE_DmjbZ4ouUco-m5jGOknW69W47Ir45m4/edit#gid=0
+      sq_width = [width, height].min
+      sq_x_offset = (width - sq_width) / 2
+      sq_y_offset = (height - sq_width) / 2
+
+      fontsize_a = (sq_width * 1.05) - 4.4
+      fontsize_b = fontsize_a - 0.59
+      tdx = sq_x_offset + 2.853
+      tdy = (sq_y_offset * 0.9) + 1.7 + (sq_width * 0.13)
+
+      bg_color = mousedown ? '0.75293' : '1'
+
+      # PDF Reference 1.7 - page 219 - TABLE 4.7 Graphics state operators
+      # a b c d e f cm: Modify the current transformation matrix (CTM)
+      #
+      # page 226 - TABLE 4.9 Path construction operators
+      # x y m: Begin a new subpath by moving the current point to coordinates (x, y)
+      # x1 y1 x2 y2 x3 y3 c: Append a cubic Bézier curve to the current path
+      # x y l: Append a straight line segment from the current point to the point (x, y)
+      # h: Close the current subpath by appending a straight line segment from the current point to the starting point of the subpath.
+
+      stream_ref.stream << %(
+#{bg_color} g
+0 0 #{width.round(4)} #{height.round(4)} re
+f
+0.5 0.5 #{(width - 1).round(4)} #{(height - 1).round(4)} re
+s
+q
+1 1 #{(width - 2).round(4)} #{(height - 2).round(4)} re
+W
+n
+0 g
+BT
+/ZaDb #{fontsize_a.round(4)} Tf
+#{tdx.round(4)} #{tdy.round(4)} Td
+#{fontsize_b.round(4)} TL
+0 0 Td
+(4) Tj
+ET
+Q
+      )
+      stream_ref
     end
 
     alias checkbox_on_over checkbox_on
-    alias checkbox_on_down checkbox_on
+    # alias checkbox_on_down checkbox_on
+    def checkbox_on_down(element)
+      checkbox_on(element, :checkbox_on_down, :down)
+    end
 
-    def radio_off(element)
+    def radio_off(element, cache_key = :radio_off, mousedown = false)
       element.width = 10 if !element.width || (element.width <= 0)
       element.height = 10 if !element.height || (element.height <= 0)
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
-      cached(:radio_off, width, height, style, border_style) do
-        render(BBox: [0, 0, width, height]) do
-          document.canvas do
-            # render background
-            document.fill_color(*denormalize_color(style[:BG]))
-            document.stroke_color(*denormalize_color(style[:BC]))
-            document.line_width(border_style[:W])
-            rx = (width / 2.0)
-            ry = (height / 2.0)
-            document.fill_and_stroke_ellipse([rx, ry], rx - border_style[:W], ry - border_style[:W])
-          end
+      # border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
+      cached(cache_key, width, height, style) do
+        render(
+          BBox: [0, 0, width, height],
+          FormType: 1,
+          Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+          Type: :XObject,
+          Subtype: :Form,
+          Resources: { ProcSet: %i[PDF Text] }
+        ) do
+          bg_color = mousedown ? '0.75293' : '1'
+          document.add_content %(
+#{bg_color} g
+q
+1 0 0 1 9 9 cm
+9 0 m
+9 4.9708 4.9708 9 0 9 c
+-4.9708 9 -9 4.9708 -9 0 c
+-9 -4.9708 -4.9708 -9 0 -9 c
+4.9708 -9 9 -4.9708 9 0 c
+f
+Q
+q
+1 0 0 1 9 9 cm
+8.5 0 m
+8.5 4.6946 4.6946 8.5 0 8.5 c
+-4.6946 8.5 -8.5 4.6946 -8.5 0 c
+-8.5 -4.6946 -4.6946 -8.5 0 -8.5 c
+4.6946 -8.5 8.5 -4.6946 8.5 0 c
+s
+Q
+0.501953 G
+q
+0.7071 0.7071 -0.7071 0.7071 9 9 cm
+7.5 0 m
+7.5 4.1423 4.1423 7.5 0 7.5 c
+-4.1423 7.5 -7.5 4.1423 -7.5 0 c
+S
+Q
+0.75293 G
+q
+0.7071 0.7071 -0.7071 0.7071 9 9 cm
+-7.5 0 m
+-7.5 -4.1423 -4.1423 -7.5 0 -7.5 c
+4.1423 -7.5 7.5 -4.1423 7.5 0 c
+S
+Q
+          )
         end
       end
     end
 
     alias radio_off_over radio_off
-    alias radio_off_down radio_off
+    # alias radio_off_down radio_off
+    def radio_off_down(element)
+      radio_off(element, :radio_off_down, :down)
+    end
 
-    def radio_on(element)
+    def radio_on(element, _cache_key = :radio_on, mousedown = false)
       element.width = 10 if !element.width || (element.width <= 0)
       element.height = 10 if !element.height || (element.height <= 0)
       width = element.width
       height = element.height
       style = element.style ||= Prawn::ColorStyle(@document, 'ffffff', '000000')
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 4)
-      cached(:radio_on, width, height, style, border_style) do
+      # border_style = element.border_style ||= Prawn::BorderStyle(@document, 4)
+      cached(:radio_on, width, height, style) do
         render(BBox: [0, 0, width, height]) do
-          document.canvas do
-            # render background
-            document.fill_color(*denormalize_color(style[:BG]))
-            document.stroke_color(*denormalize_color(style[:BC]))
-            document.line_width(border_style[:W])
-            rx = (width / 2.0)
-            ry = (height / 2.0)
-            document.fill_and_stroke_ellipse([rx, ry], rx - border_style[:W], ry - border_style[:W])
-
-            document.fill_color(*denormalize_color(style[:BC]))
-            document.fill_ellipse([rx, ry], rx - border_style[:W] - 2, ry - border_style[:W] - 2)
-          end
+          bg_color = mousedown ? '0.75293' : '1'
+          document.add_content %(
+#{bg_color} g
+q
+1 0 0 1 9 9 cm
+9 0 m
+9 4.9708 4.9708 9 0 9 c
+-4.9708 9 -9 4.9708 -9 0 c
+-9 -4.9708 -4.9708 -9 0 -9 c
+4.9708 -9 9 -4.9708 9 0 c
+f
+Q
+q
+1 0 0 1 9 9 cm
+8.5 0 m
+8.5 4.6946 4.6946 8.5 0 8.5 c
+-4.6946 8.5 -8.5 4.6946 -8.5 0 c
+-8.5 -4.6946 -4.6946 -8.5 0 -8.5 c
+4.6946 -8.5 8.5 -4.6946 8.5 0 c
+s
+Q
+0.501953 G
+q
+0.7071 0.7071 -0.7071 0.7071 9 9 cm
+7.5 0 m
+7.5 4.1423 4.1423 7.5 0 7.5 c
+-4.1423 7.5 -7.5 4.1423 -7.5 0 c
+S
+Q
+0.75293 G
+q
+0.7071 0.7071 -0.7071 0.7071 9 9 cm
+-7.5 0 m
+-7.5 -4.1423 -4.1423 -7.5 0 -7.5 c
+4.1423 -7.5 7.5 -4.1423 7.5 0 c
+S
+Q
+0 g
+q
+1 0 0 1 9 9 cm
+3.5 0 m
+3.5 1.9331 1.9331 3.5 0 3.5 c
+-1.9331 3.5 -3.5 1.9331 -3.5 0 c
+-3.5 -1.9331 -1.9331 -3.5 0 -3.5 c
+1.9331 -3.5 3.5 -1.9331 3.5 0 c
+f
+Q
+          ).strip
         end
       end
     end
 
     alias radio_on_over radio_on
-    alias radio_on_down radio_on
+    # alias radio_on_down radio_on
+    def radio_on_down(element)
+      radio_on(element, :radio_on_down, :down)
+    end
 
     # For DA instead of AP
     def text_field_default_appearance(element)

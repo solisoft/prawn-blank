@@ -1,11 +1,28 @@
 # frozen_string_literal: true
 
 class Prawn::Blank::Form < Hash
-  def initialize
+  def initialize(document)
     super()
-    self[:DR] = {}
     self[:Fields] = []
-    self[:NeedAppearances] = true
+    zadb_ref = document.ref!(
+      Name: :ZaDb,
+      Subtype: :Type1,
+      BaseFont: :ZapfDingbats,
+      Type: :Font
+    )
+    helv_ref = document.ref!(
+      Name: :Helv,
+      Subtype: :Type1,
+      BaseFont: :Helvetica,
+      Type: :Font
+    )
+    self[:DR] = {
+      Font: {
+        ZaDb: zadb_ref,
+        Helv: helv_ref
+      }
+    }
+    self[:DA] = PDF::Core::LiteralString.new('/Helv 0 Tf 0 g')
   end
 
   def add_resource(type, name, dict)

@@ -11,6 +11,15 @@ module Prawn::Blank
       @data.delete :Subtype
     end
 
+    def grouped_checkboxes=(value)
+      if value
+        # This allows the group of checkboxes to be deselected after one is clicked.
+        self.flags = nil
+      else
+        self.flags = 32_768
+      end
+    end
+
     protected
 
     def default_options

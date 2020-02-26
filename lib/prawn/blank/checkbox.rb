@@ -13,23 +13,31 @@ class Prawn::Blank::Checkbox < Prawn::Blank::Field
   end
 
   def checked=(value)
-    @data[:V] =
-      if value
-        @data[:AS] = :Yes
-        :Yes
-      else
-        @data[:AS] = :Off
-        :Off
-      end
+    if value
+      @data[:AS] = :Yes
+      @data[:V] = :Yes
+      @data[:DV] = :Yes
+    else
+      @data[:AS] = :Off
+      # @data[:V] = :Off
+      # @data.delete :V
+    end
   end
 
   def finalize(document)
+    # @data[:Opt] = [:Yes]
+    # @data[:DA] = '/Helvetica 12 Tf 0 g'
+
     # render this field
 
     app = appearance || document.default_appearance
 
+    # PDF Reference v1.7.pdf, page 614
+    # N: Normal appearance
+    # R: Rollover appearance (mouse hover)
+    # D: Down appearance (mouse down)
     @data[:AP] = { N: { Off: app.checkbox_off(self), Yes: app.checkbox_on(self) },
-                   R: { Off: app.checkbox_off_over(self), Yes: app.checkbox_on_over(self) },
+                   # R: { Off: app.checkbox_off_over(self), Yes: app.checkbox_on_over(self) },
                    D: { Off: app.checkbox_off_down(self), Yes: app.checkbox_on_down(self) } }
     nil
   end
@@ -37,6 +45,6 @@ class Prawn::Blank::Checkbox < Prawn::Blank::Field
   protected
 
   def default_options
-    super.merge(FT: :Btn)
+    super.merge(F: 0, FT: :Btn) # , Ff: 0)
   end
 end

@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-require "prawn"
+require 'prawn'
 
 module Prawn
   module Blank
-    autoload :Form, "prawn/blank/form"
-    autoload :Style, "prawn/blank/style"
-    autoload :FieldBase, "prawn/blank/field_base"
-    autoload :Field, "prawn/blank/field"
-    autoload :Appearance, "prawn/blank/appearance"
-    autoload :TextField, "prawn/blank/text_field"
-    autoload :Checkbox, "prawn/blank/checkbox"
-    autoload :Select, "prawn/blank/select"
-    autoload :Combo, "prawn/blank/combo"
-    autoload :RadioGroup, "prawn/blank/radio_group"
-    autoload :Radio, "prawn/blank/radio"
-    autoload :TextStyle, "prawn/blank/text_style"
+    autoload :Form, 'prawn/blank/form'
+    autoload :Style, 'prawn/blank/style'
+    autoload :FieldBase, 'prawn/blank/field_base'
+    autoload :Field, 'prawn/blank/field'
+    autoload :Appearance, 'prawn/blank/appearance'
+    autoload :TextField, 'prawn/blank/text_field'
+    autoload :Checkbox, 'prawn/blank/checkbox'
+    autoload :Select, 'prawn/blank/select'
+    autoload :Combo, 'prawn/blank/combo'
+    autoload :RadioGroup, 'prawn/blank/radio_group'
+    autoload :Radio, 'prawn/blank/radio'
+    autoload :TextStyle, 'prawn/blank/text_style'
 
     def text_field(options = {})
       options[:at] = send(:map_to_absolute, options[:at]) if options[:at]
@@ -52,7 +52,7 @@ module Prawn
     end
 
     def acroform
-      state.store.root.data[:AcroForm] ||= ref!(Form.new)
+      state.store.root.data[:AcroForm] ||= ref!(Form.new(self))
       state.store.root.data[:AcroForm].data
     end
 
@@ -65,11 +65,11 @@ module Prawn
     protected
 
     def handle_page_rotation(field)
-      page_rotation = get_page_rotation(self.page)
+      page_rotation = get_page_rotation(page)
       return if page_rotation == 0
 
       adjust_mk_rotate_on_page_rotation(field, page_rotation)
-      adjust_rect_on_page_rotation(field, page_rotation, self.page)
+      adjust_rect_on_page_rotation(field, page_rotation, page)
     end
 
     def adjust_mk_rotate_on_page_rotation(field, page_rotation)
@@ -85,7 +85,7 @@ module Prawn
       page_rotation = get_page_rotation(page)
 
       if [90, 270].include?(page_rotation)
-        swap_width  = page_width
+        swap_width = page_width
 
         page_width  = page_height
         page_height = swap_width
@@ -136,7 +136,6 @@ module Prawn
       page_rotation
     end
 
-
     def add_field(field)
       field.finalize(self)
       handle_page_rotation(field)
@@ -147,12 +146,16 @@ module Prawn
       acroform.add_field(field) if field.root?
 
       # Add field to annots
-      state.page.dictionary.data[:Annots] ||= []
-      
-      if state.page.dictionary.data[:Annots].is_a?(PDF::Core::Reference)
-        state.page.dictionary.data[:Annots].data << field
-      else
-        state.page.dictionary.data[:Annots] << field
+      # (Unless it's a Radio Group - the parent group is only added to the acroform
+      # since it's not an annotation, but each kid is added.)
+      unless field.is_a? Prawn::Blank::RadioGroup
+        state.page.dictionary.data[:Annots] ||= []
+
+        if state.page.dictionary.data[:Annots].is_a?(PDF::Core::Reference)
+          state.page.dictionary.data[:Annots].data << field
+        else
+          state.page.dictionary.data[:Annots] << field
+        end
       end
 
       field
@@ -167,17 +170,17 @@ module Prawn
     {
       W: width,
       Type: :Border,
-      S: style,
+      S: style
     }
   end
 
   def self.ColorStyle(doc, fill, stroke)
     {
       BC: doc.send(:normalize_color, stroke),
-      BG: doc.send(:normalize_color, fill),
+      BG: doc.send(:normalize_color, fill)
     }
   end
 end
 
-require "prawn/document"
+require 'prawn/document'
 Prawn::Document.extensions << Prawn::Blank
