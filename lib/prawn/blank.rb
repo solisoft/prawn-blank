@@ -62,6 +62,13 @@ module Prawn
       @default_appearance ||= Appearance.new(self)
     end
 
+    def get_page_rotation(page)
+      page_rotation = (page.dictionary.try(:data).try(:[], :Rotate) || 0).to_i
+      # 360 is a valid page rotation
+      page_rotation %= 360
+      page_rotation
+    end
+
     protected
 
     def handle_page_rotation(field)
@@ -127,13 +134,6 @@ module Prawn
       else
         raise "Don't know how to handle a page rotation of #{rotation} degrees!"
       end
-    end
-
-    def get_page_rotation(page)
-      page_rotation = (page.dictionary.try(:data).try(:[], :Rotate) || 0).to_i
-      # 360 is a valid page rotation
-      page_rotation %= 360
-      page_rotation
     end
 
     def add_field(field)

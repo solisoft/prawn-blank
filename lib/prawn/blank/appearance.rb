@@ -25,6 +25,24 @@ module Prawn::Blank
       # @style = STYLE.dup
     end
 
+    # If the page is rotated, we need to apply a matrix to the appearance streams
+    # These were figured out by creating 4 PDFs in Adobe Acrobat with various rotations,
+    # uncompressing the PDFs with pdftk, and inspecting the contents in a text editor.
+    def xobject_matrix(width, height)
+      page_rotation = document.get_page_rotation(document.state.page)
+      case page_rotation
+      when 0
+        return [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+      when 90
+        return [0.0, 1.0, -1.0, 0.0, height, 0.0]
+      when 180
+        return [-1.0, 0.0, 0.0, -1.0, width, height]
+      when 270
+        return [0.0, -1.0, 1.0, 0.0, 0.0, width]
+      end
+      raise "Unhandled page rotation for xobject_matrix! #{page_rotation}"
+    end
+
     def render(dict)
       dict = {
         Type: :XObject,
@@ -79,7 +97,7 @@ module Prawn::Blank
       stream_dict = {
         BBox: [0, 0, width, height],
         FormType: 1,
-        Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        Matrix: xobject_matrix(width, height),
         Type: :XObject,
         Subtype: :Form,
         Resources: {
@@ -131,7 +149,7 @@ s
       stream_dict = {
         BBox: [0, 0, width, height],
         FormType: 1,
-        Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        Matrix: xobject_matrix(width, height),
         Type: :XObject,
         Subtype: :Form,
         Resources: {
@@ -205,7 +223,7 @@ Q
         render(
           BBox: [0, 0, width, height],
           FormType: 1,
-          Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+          Matrix: xobject_matrix(width, height),
           Type: :XObject,
           Subtype: :Form,
           Resources: { ProcSet: %i[PDF Text] }
@@ -345,7 +363,7 @@ Q
       stream_dict = {
         BBox: [0, 0, width, height],
         FormType: 1,
-        Matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        Matrix: xobject_matrix(width, height),
         Type: :XObject,
         Subtype: :Form,
         Resources: {
