@@ -87,7 +87,7 @@ EVAL
   field_attr_accessor :fullname, :TU, false
   field_attr_accessor :value, :V
   field_attr_accessor :default_value, :DV
-  field_attr_accessor :text_style, :DA
+  field_attr_accessor :default_appearance, :DA
   field_attr_accessor :alignment, :Q
   field_attr_accessor :_app, :AP
   field_attr_accessor :border_style, :BS
@@ -96,8 +96,35 @@ EVAL
   field_attr_accessor :options, :Opt
   field_attr_accessor :max_length, :MaxLen
 
+  attr_reader :text_style
+  attr_reader :shrink_to_fit
+
+  # Special case for text_style / default_appearance
+  # When shrink_to_fit is true, the default_appearance font size is set to 0
+  # But the appearance stream font size must be preserved
+  def text_style=(value)
+    @text_style = value
+    set_default_appearance_from_text_style
+  end
+
+  def shrink_to_fit=(value)
+    @shrink_to_fit = value
+    set_default_appearance_from_text_style
+    shrink_to_fit
+  end
+
+  def set_default_appearance_from_text_style
+    return unless text_style
+
+    ts = text_style
+    font_size = shrink_to_fit ? 0 : ts.size
+    @data[:DA] = Prawn::TextStyle(
+      ts.document, ts.font, ts.style, font_size, ts.color, ts.font_subset
+    )
+  end
+
   def name=(value)
-    @data[:T] = PDF::Core::LiteralString.new value
+    @data[:T] = (value && PDF::Core::LiteralString.new(value.to_s))
   end
 
   flag_accessor :invisible, 1, 'aflags'

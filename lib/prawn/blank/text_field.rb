@@ -21,13 +21,15 @@ class Prawn::Blank::TextField < Prawn::Blank::Field
 
     # Variable text fields should not have appearance streams.
     # See the "Variable Text" section in the PDF reference.
+    # UPDATE: They do need appearance streams, otherwise they are not
+    # rendered properly in Adobe Reader Touch (Windows.)
+    # The appearance stream is overridden as soon as the field is modified.
+    app = appearance || document.default_appearance
 
-    # app = appearance || document.default_appearance
-
-    # @data[:AP] = {
-    #   N: app.text_field_default_appearance(self)
-    # }
-    # @data[:AS] = :N
+    @data[:AP] = {
+      N: app.text_field_default_appearance(self)
+    }
+    @data[:AS] = :N
 
     nil
   end
