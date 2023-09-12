@@ -350,10 +350,18 @@ Q
       )
       border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
 
-      element.width = 100 if !element.width || (element.width <= 0)
-      element.height = text_style.size + 6 + 2 * border_style[:W] if !element.height || (element.height <= 0)
+      if !element.width || (element.width <= 0)
+        element.width = 100
+      end
+      if !element.height || (element.height <= 0)
+        element.height = text_style.size + 6 + 2 * border_style[:W]
+      end
       width = element.width
       height = element.height
+
+      descent_ratio = 0.23
+      vertical_offset = text_style.size * descent_ratio + 1.25
+
       style = Prawn::ColorStyle(@document, 'ffffff', '000000')
       multiline = element.multiline
       value = element.value
@@ -383,7 +391,7 @@ W
 n
 BT
 #{text_style.to_s}
-2 6.548 Td
+2 #{vertical_offset} Td
 (#{value}) Tj
 ET
 Q
