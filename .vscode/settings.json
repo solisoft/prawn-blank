@@ -1,3 +1,5 @@
 {
-  "editor.formatOnSave": true
+  "editor.formatOnSave": false,
+  "ruby.rubocop.onSave": false,
+  "files.trimTrailingWhitespace": true
 }
