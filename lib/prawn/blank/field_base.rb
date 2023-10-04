@@ -99,6 +99,16 @@ EVAL
   attr_reader :text_style
   attr_reader :shrink_to_fit
 
+  attr_accessor :text_box_opacity
+  attr_accessor :text_box_background_color
+  attr_accessor :text_box_align
+  attr_accessor :text_box_valign
+  attr_accessor :text_box_overflow
+  attr_accessor :text_box_single_line
+  attr_accessor :text_box_character_spacing
+  attr_accessor :text_box_text_direction
+  attr_accessor :text_box_strikethrough
+
   # Special case for text_style / default_appearance
   # When shrink_to_fit is true, the default_appearance font size is set to 0
   # But the appearance stream font size must be preserved

@@ -345,99 +345,209 @@ Q
 
     # For DA instead of AP
     def text_field_default_appearance(element)
-      text_style = element.text_style ||= Prawn::TextStyle(
-        @document, 'Helvetica', :normal, 10, '000000'
-      )
-      border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
+      text_style = element.text_style ||= Prawn::TextStyle(@document,"Helvetica",9,'000000')
+      # border_style = element.border_style ||= Prawn::BorderStyle(@document,1)
 
-      if !element.width || (element.width <= 0)
+      if !element.width or element.width <= 0
         element.width = 100
       end
-      if !element.height || (element.height <= 0)
-        element.height = text_style.size + 6 + 2 * border_style[:W]
+      if !element.height or element.height <= 0
+        element.height = text_style.size + 6 # + 2 * border_style[:W]
       end
       width = element.width
       height = element.height
-
-      descent_ratio = 0.23
-      vertical_offset = text_style.size * descent_ratio + 1.25
-
-      style = Prawn::ColorStyle(@document, 'ffffff', '000000')
+      style = element.style ||= Prawn::ColorStyle(@document,'ffffff','000000')
       multiline = element.multiline
       value = element.value
 
-      font_ref = document.state.page.fonts[text_style.font_identifier]
+      return cached(
+        :text_field,
+        width,
+        height,
+        style,
+        text_style,
+        multiline,
+        value,
+        element.text_box_opacity,
+        element.text_box_background_color,
+        element.text_box_align,
+        element.text_box_valign,
+        element.text_box_overflow,
+        element.text_box_single_line,
+        element.text_box_character_spacing,
+        element.text_box_text_direction,
+        element.text_box_strikethrough
+      ) do
+        render( :BBox => [0, 0, width, height] ) do
+          document.canvas do
+            document.save_font do
+              document.transparent(element.text_box_opacity) do
+                document.stroke_color( *denormalize_color(style[:BC]) )
+                document.fill_color( *denormalize_color(style[:BG]) )
 
-      stream_dict = {
-        BBox: [0, 0, width, height],
-        FormType: 1,
-        Matrix: xobject_matrix(width, height),
-        Type: :XObject,
-        Subtype: :Form,
-        Resources: {
-          ProcSet: %i[PDF Text],
-          Font: { text_style.font_identifier => font_ref }
-        }
-      }
+                # render background
+                if element.text_box_background_color.present?
+                  document.fill_color(element.text_box_background_color)
+                  document.fill_rectangle( [0, height], width, height)
+                end
 
-      stream_ref = document.ref!(stream_dict)
-      document.acroform.add_resources(stream_ref.data[:Resources])
+                # document.line_width(border_style[:W])
+                # bw = border_style[:W]/2.0
 
-      stream_ref.stream << %(
-/Tx BMC
-q
-1 1 #{width - 2} #{height - 2} re
-W
-n
-BT
-#{text_style.to_s}
-2 #{vertical_offset} Td
-(#{value}) Tj
-ET
-Q
-EMC
-      )
-      stream_ref
+                next unless value.present?
+                if text_style
+                  document.font(text_style.font, size: text_style.size, style: text_style.style )
+                  document.stroke_color( *text_style.color )
+                  document.fill_color( *text_style.color )
+                end
 
-      # # cached(:text_field, width, height, style, border_style, text_style, multiline, value) do
-      # render(BBox: [0, 0, width, height]) do
-      #   document.canvas do
-      #     document.save_font do
-      #       # resources = (document.page.dictionary.data[:Resources] ||= {})
-      #       # resources[:Font] ||= []
-      #       # resources[:Font] << pdf.find_font('Helvetica')
+                # document.draw_text(value, at: [0, [0, height - document.font_size - 1.5].max ] )
 
-      #       # render background
-      #       document.fill_color(*denormalize_color(style[:BG]))
-      #       document.stroke_color(*denormalize_color(style[:BC]))
-      #       document.line_width(border_style[:W])
-      #       if border_style[:W] > 0
-      #         bw = border_style[:W] / 2.0
-      #         document.fill_and_stroke_rectangle(
-      #           [bw, height - bw], width - border_style[:W], height - border_style[:W]
-      #         )
-      #       else
-      #         document.fill_rectangle(
-      #           [0, height], width, height
-      #         )
-      #       end
-      #       document.font(text_style.font, size: text_style.size, style: text_style.style)
-      #       document.fill_color(*text_style.color)
+                # text_offset_y = [height - document.font_size - 1.5].max
 
-      #       if value
-      #         document.draw_text(
-      #           value,
-      #           at: [
-      #             0,
-      #             [1, height - document.font_size - 1.5].max
-      #           ]
-      #         )
-      #       end
-      #     end
-      #   end
-      # end
-      # # end
+                text_box_args = {
+                  # at: [0, text_offset_y],
+                  at: [0, height],
+                  width: width,
+                  height: height,
+                  align: element.text_box_align,
+                  valign: element.text_box_valign,
+                  overflow: element.text_box_overflow,
+                  min_font_size: 5,
+                  single_line: element.multiline == 0,
+                  character_spacing: element.text_box_character_spacing,
+                  direction: element.text_box_text_direction,
+                }
+
+                text_options = { text: value }
+
+                if element.text_box_strikethrough
+                  text_options[:styles] = [:strikethrough]
+                end
+
+                formatted_text_array = [text_options]
+
+                begin
+                  document.formatted_text_box(
+                    formatted_text_array,
+                    text_box_args
+                  )
+                rescue Prawn::Errors::CannotFit
+                  document.draw_text value, at: [0, height], direction: text_direction
+                end
+              end
+            end
+          end
+        end
+      end
     end
+
+#       text_style = element.text_style ||= Prawn::TextStyle(
+#         @document, 'Helvetica', :normal, 10, '000000'
+#       )
+#       border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
+
+#       if !element.width || (element.width <= 0)
+#         element.width = 100
+#       end
+#       if !element.height || (element.height <= 0)
+#         element.height = text_style.size + 6 + 2 * border_style[:W]
+#       end
+#       width = element.width
+#       height = element.height
+
+#       descent_ratio = 0.23
+#       vertical_offset = text_style.size * descent_ratio + 1.25
+
+#       style = Prawn::ColorStyle(@document, 'ffffff', '000000')
+#       multiline = element.multiline
+#       value = element.value
+
+#       font_ref = document.state.page.fonts[text_style.font_identifier]
+
+#       stream_dict = {
+#         BBox: [0, 0, width, height],
+#         FormType: 1,
+#         Matrix: xobject_matrix(width, height),
+#         Type: :XObject,
+#         Subtype: :Form,
+#         Resources: {
+#           ProcSet: %i[PDF Text],
+#           Font: { text_style.font_identifier => font_ref }
+#         }
+#       }
+
+#       stream_ref = document.ref!(stream_dict)
+#       document.acroform.add_resources(stream_ref.data[:Resources])
+
+#       # text_box_args = {
+#       #   at: [x, y],
+#       #   width: field_width,
+#       #   height: field_height,
+#       #   align: align,
+#       #   valign: v_align,
+#       #   overflow: overflow,
+#       #   min_font_size: 5,
+#       #   single_line: !field['multiline'],
+#       #   character_spacing: character_spacing,
+#       #   direction: text_direction,
+#       # }
+
+#       stream_ref.stream << %(
+# /Tx BMC
+# q
+# 1 1 #{width - 2} #{height - 2} re
+# W
+# n
+# BT
+# #{text_style.to_s}
+# 2 #{vertical_offset} Td
+# (#{value}) Tj
+# ET
+# Q
+# EMC
+#       )
+#       stream_ref
+
+#       # # cached(:text_field, width, height, style, border_style, text_style, multiline, value) do
+#       # render(BBox: [0, 0, width, height]) do
+#       #   document.canvas do
+#       #     document.save_font do
+#       #       # resources = (document.page.dictionary.data[:Resources] ||= {})
+#       #       # resources[:Font] ||= []
+#       #       # resources[:Font] << pdf.find_font('Helvetica')
+
+#       #       # render background
+#       #       document.fill_color(*denormalize_color(style[:BG]))
+#       #       document.stroke_color(*denormalize_color(style[:BC]))
+#       #       document.line_width(border_style[:W])
+#       #       if border_style[:W] > 0
+#       #         bw = border_style[:W] / 2.0
+#       #         document.fill_and_stroke_rectangle(
+#       #           [bw, height - bw], width - border_style[:W], height - border_style[:W]
+#       #         )
+#       #       else
+#       #         document.fill_rectangle(
+#       #           [0, height], width, height
+#       #         )
+#       #       end
+#       #       document.font(text_style.font, size: text_style.size, style: text_style.style)
+#       #       document.fill_color(*text_style.color)
+
+#       #       if value
+#       #         document.draw_text(
+#       #           value,
+#       #           at: [
+#       #             0,
+#       #             [1, height - document.font_size - 1.5].max
+#       #           ]
+#       #         )
+#       #       end
+#       #     end
+#       #   end
+#       # end
+#       # # end
+#     end
 
     protected
 
