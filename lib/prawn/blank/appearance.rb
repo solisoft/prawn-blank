@@ -345,8 +345,10 @@ Q
 
     # For DA instead of AP
     def text_field_default_appearance(element)
-      text_style = element.text_style ||= Prawn::TextStyle(@document,"Helvetica",9,'000000')
-      # border_style = element.border_style ||= Prawn::BorderStyle(@document,1)
+      text_style = element.text_style ||= Prawn::TextStyle(@document,"Helvetica",10,'000000')
+
+      # Set border width to 0, don't add any borders by default
+      element.border_style ||= Prawn::BorderStyle(@document, 0)
 
       if !element.width or element.width <= 0
         element.width = 100
@@ -356,7 +358,7 @@ Q
       end
       width = element.width
       height = element.height
-      style = element.style ||= Prawn::ColorStyle(@document,'ffffff','000000')
+      style = element.style ||= Prawn::ColorStyle(@document,'ffffff','ffffff')
       multiline = element.multiline
       value = element.value
 
