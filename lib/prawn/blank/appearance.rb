@@ -360,6 +360,8 @@ Q
       multiline = element.multiline
       value = element.value
 
+      font_ref = document.state.page.fonts[text_style.font_identifier]
+
       return cached(
         :text_field,
         width,
@@ -378,69 +380,75 @@ Q
         element.text_box_text_direction,
         element.text_box_strikethrough
       ) do
-        render( :BBox => [0, 0, width, height] ) do
+        render(
+          BBox: [0, 0, width, height],
+          FormType: 1,
+          Matrix: xobject_matrix(width, height),
+        ) do
           document.canvas do
             document.save_font do
               document.transparent(element.text_box_opacity) do
-                document.stroke_color( *denormalize_color(style[:BC]) )
-                document.fill_color( *denormalize_color(style[:BG]) )
+                  document.stroke_color( *denormalize_color(style[:BC]) )
+                  document.fill_color( *denormalize_color(style[:BG]) )
 
-                # render background
-                if element.text_box_background_color.present?
-                  document.fill_color(element.text_box_background_color)
-                  document.fill_rectangle( [0, height], width, height)
-                end
+                  # render background
+                  if element.text_box_background_color.present?
+                    document.fill_color(element.text_box_background_color)
+                    document.fill_rectangle( [0, height], width, height)
+                  end
 
-                # document.line_width(border_style[:W])
-                # bw = border_style[:W]/2.0
+                  # document.line_width(border_style[:W])
+                  # bw = border_style[:W]/2.0
 
-                next unless value.present?
-                if text_style
-                  document.font(text_style.font, size: text_style.size, style: text_style.style )
-                  document.stroke_color( *text_style.color )
-                  document.fill_color( *text_style.color )
-                end
+                  next unless value.present?
 
-                # document.draw_text(value, at: [0, [0, height - document.font_size - 1.5].max ] )
+                  if text_style
+                    document.font(text_style.font, size: text_style.size, style: text_style.style )
+                    document.stroke_color( *text_style.color )
+                    document.fill_color( *text_style.color )
+                  end
 
-                # text_offset_y = [height - document.font_size - 1.5].max
+                  # document.draw_text(value, at: [0, [0, height - document.font_size - 1.5].max ] )
 
-                text_box_args = {
-                  # at: [0, text_offset_y],
-                  at: [0, height],
-                  width: width,
-                  height: height,
-                  align: element.text_box_align,
-                  valign: element.text_box_valign,
-                  overflow: element.text_box_overflow,
-                  min_font_size: 5,
-                  single_line: element.multiline == 0,
-                  character_spacing: element.text_box_character_spacing,
-                  direction: element.text_box_text_direction,
-                }
+                  # text_offset_y = [height - document.font_size - 1.5].max
 
-                text_options = { text: value }
+                  text_box_args = {
+                    # at: [0, text_offset_y],
+                    at: [0, height],
+                    width: width,
+                    height: height,
+                    align: element.text_box_align,
+                    valign: element.text_box_valign,
+                    overflow: element.text_box_overflow,
+                    min_font_size: 5,
+                    single_line: element.multiline == 0,
+                    character_spacing: element.text_box_character_spacing,
+                    direction: element.text_box_text_direction,
+                  }
 
-                if element.text_box_strikethrough
-                  text_options[:styles] = [:strikethrough]
-                end
+                  text_options = { text: value }
 
-                formatted_text_array = [text_options]
+                  if element.text_box_strikethrough
+                    text_options[:styles] = [:strikethrough]
+                  end
 
-                begin
-                  document.formatted_text_box(
-                    formatted_text_array,
-                    text_box_args
-                  )
-                rescue Prawn::Errors::CannotFit
-                  document.draw_text value, at: [0, height], direction: text_direction
-                end
+                  formatted_text_array = [text_options]
+
+                  begin
+                    document.formatted_text_box(
+                      formatted_text_array,
+                      text_box_args
+                    )
+                  rescue Prawn::Errors::CannotFit
+                    document.draw_text value, at: [0, height], direction: text_direction
+                  end
               end
             end
           end
         end
       end
     end
+
 
 #       text_style = element.text_style ||= Prawn::TextStyle(
 #         @document, 'Helvetica', :normal, 10, '000000'
