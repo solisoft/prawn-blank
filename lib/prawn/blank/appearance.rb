@@ -389,7 +389,7 @@ Q
         ) do
           document.canvas do
             document.save_font do
-              document.transparent(element.text_box_opacity) do
+              document.transparent(element.text_box_opacity || 1) do
                   document.stroke_color( *denormalize_color(style[:BC]) )
                   document.fill_color( *denormalize_color(style[:BG]) )
 
