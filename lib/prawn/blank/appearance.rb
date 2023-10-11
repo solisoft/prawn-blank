@@ -387,6 +387,7 @@ Q
           FormType: 1,
           Matrix: xobject_matrix(width, height),
         ) do
+          document.add_content '/Tx BMC'
           document.canvas do
             document.save_font do
               document.transparent(element.text_box_opacity || 1) do
@@ -447,117 +448,10 @@ Q
               end
             end
           end
+          document.add_content 'EMC'
         end
       end
     end
-
-
-#       text_style = element.text_style ||= Prawn::TextStyle(
-#         @document, 'Helvetica', :normal, 10, '000000'
-#       )
-#       border_style = element.border_style ||= Prawn::BorderStyle(@document, 0)
-
-#       if !element.width || (element.width <= 0)
-#         element.width = 100
-#       end
-#       if !element.height || (element.height <= 0)
-#         element.height = text_style.size + 6 + 2 * border_style[:W]
-#       end
-#       width = element.width
-#       height = element.height
-
-#       descent_ratio = 0.23
-#       vertical_offset = text_style.size * descent_ratio + 1.25
-
-#       style = Prawn::ColorStyle(@document, 'ffffff', '000000')
-#       multiline = element.multiline
-#       value = element.value
-
-#       font_ref = document.state.page.fonts[text_style.font_identifier]
-
-#       stream_dict = {
-#         BBox: [0, 0, width, height],
-#         FormType: 1,
-#         Matrix: xobject_matrix(width, height),
-#         Type: :XObject,
-#         Subtype: :Form,
-#         Resources: {
-#           ProcSet: %i[PDF Text],
-#           Font: { text_style.font_identifier => font_ref }
-#         }
-#       }
-
-#       stream_ref = document.ref!(stream_dict)
-#       document.acroform.add_resources(stream_ref.data[:Resources])
-
-#       # text_box_args = {
-#       #   at: [x, y],
-#       #   width: field_width,
-#       #   height: field_height,
-#       #   align: align,
-#       #   valign: v_align,
-#       #   overflow: overflow,
-#       #   min_font_size: 5,
-#       #   single_line: !field['multiline'],
-#       #   character_spacing: character_spacing,
-#       #   direction: text_direction,
-#       # }
-
-#       stream_ref.stream << %(
-# /Tx BMC
-# q
-# 1 1 #{width - 2} #{height - 2} re
-# W
-# n
-# BT
-# #{text_style.to_s}
-# 2 #{vertical_offset} Td
-# (#{value}) Tj
-# ET
-# Q
-# EMC
-#       )
-#       stream_ref
-
-#       # # cached(:text_field, width, height, style, border_style, text_style, multiline, value) do
-#       # render(BBox: [0, 0, width, height]) do
-#       #   document.canvas do
-#       #     document.save_font do
-#       #       # resources = (document.page.dictionary.data[:Resources] ||= {})
-#       #       # resources[:Font] ||= []
-#       #       # resources[:Font] << pdf.find_font('Helvetica')
-
-#       #       # render background
-#       #       document.fill_color(*denormalize_color(style[:BG]))
-#       #       document.stroke_color(*denormalize_color(style[:BC]))
-#       #       document.line_width(border_style[:W])
-#       #       if border_style[:W] > 0
-#       #         bw = border_style[:W] / 2.0
-#       #         document.fill_and_stroke_rectangle(
-#       #           [bw, height - bw], width - border_style[:W], height - border_style[:W]
-#       #         )
-#       #       else
-#       #         document.fill_rectangle(
-#       #           [0, height], width, height
-#       #         )
-#       #       end
-#       #       document.font(text_style.font, size: text_style.size, style: text_style.style)
-#       #       document.fill_color(*text_style.color)
-
-#       #       if value
-#       #         document.draw_text(
-#       #           value,
-#       #           at: [
-#       #             0,
-#       #             [1, height - document.font_size - 1.5].max
-#       #           ]
-#       #         )
-#       #       end
-#       #     end
-#       #   end
-#       # end
-#       # # end
-#     end
 
     protected
 
