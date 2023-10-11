@@ -358,7 +358,7 @@ Q
       end
       width = element.width
       height = element.height
-      style = element.style ||= Prawn::ColorStyle(@document,'ffffff','ffffff')
+      style = element.style || Prawn::ColorStyle(@document,'ffffff','ffffff')
       multiline = element.multiline
       value = element.value
 
