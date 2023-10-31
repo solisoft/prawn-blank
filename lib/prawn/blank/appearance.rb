@@ -358,99 +358,140 @@ Q
       end
       width = element.width
       height = element.height
-      style = element.style || Prawn::ColorStyle(@document,'ffffff','ffffff')
+      style = element.style || Prawn::ColorStyle(@document,'ffffff','000000')
       multiline = element.multiline
       value = element.value
 
       font_ref = document.state.page.fonts[text_style.font_identifier]
 
-      return cached(
-        :text_field,
-        width,
-        height,
-        style,
-        text_style,
-        multiline,
-        value,
-        element.text_box_opacity,
-        element.text_box_background_color,
-        element.text_box_align,
-        element.text_box_valign,
-        element.text_box_overflow,
-        element.text_box_single_line,
-        element.text_box_character_spacing,
-        element.text_box_text_direction,
-        element.text_box_strikethrough
-      ) do
-        render(
-          BBox: [0, 0, width, height],
-          FormType: 1,
-          Matrix: xobject_matrix(width, height),
+      descent_ratio = 0.23
+      vertical_offset = text_style.size * descent_ratio + 1.25
+
+      if value.blank? || value.ascii_only?
+        return cached(
+          :text_field,
+          width,
+          height,
+          style,
+          text_style,
+          multiline,
+          value,
+          element.text_box_opacity,
+          element.text_box_background_color,
+          element.text_box_align,
+          element.text_box_valign,
+          element.text_box_overflow,
+          element.text_box_single_line,
+          element.text_box_character_spacing,
+          element.text_box_text_direction,
+          element.text_box_strikethrough
         ) do
-          document.add_content '/Tx BMC'
-          document.canvas do
-            document.save_font do
-              document.transparent(element.text_box_opacity || 1) do
-                  document.stroke_color( *denormalize_color(style[:BC]) )
-                  document.fill_color( *denormalize_color(style[:BG]) )
+          render(
+            BBox: [0, 0, width, height],
+            FormType: 1,
+            Matrix: xobject_matrix(width, height),
+          ) do
+            document.add_content '/Tx BMC'
+            document.canvas do
+              document.save_font do
+                document.transparent(element.text_box_opacity || 1) do
+                    document.stroke_color( *denormalize_color(style[:BC]) )
+                    document.fill_color( *denormalize_color(style[:BG]) )
 
-                  # render background
-                  if element.text_box_background_color.present?
-                    document.fill_color(element.text_box_background_color)
-                    document.fill_rectangle( [0, height], width, height)
-                  end
+                    # render background
+                    if element.text_box_background_color.present?
+                      document.fill_color(element.text_box_background_color)
+                      document.fill_rectangle( [0, height], width, height)
+                    end
 
-                  # document.line_width(border_style[:W])
-                  # bw = border_style[:W]/2.0
+                    # document.line_width(border_style[:W])
+                    # bw = border_style[:W]/2.0
 
-                  next unless value.present?
+                    next unless value.present?
 
-                  if text_style
-                    document.font(text_style.font, size: text_style.size, style: text_style.style )
-                    document.stroke_color( *text_style.color )
-                    document.fill_color( *text_style.color )
-                  end
+                    if text_style
+                      document.font(text_style.font, size: text_style.size, style: text_style.style )
+                      document.stroke_color( *text_style.color )
+                      document.fill_color( *text_style.color )
+                    end
 
-                  # document.draw_text(value, at: [0, [0, height - document.font_size - 1.5].max ] )
+                    # document.draw_text(value, at: [0, [0, height - document.font_size - 1.5].max ] )
 
-                  # text_offset_y = [height - document.font_size - 1.5].max
+                    # text_offset_y = [height - document.font_size - 1.5].max
 
-                  text_box_args = {
-                    # at: [0, text_offset_y],
-                    at: [0, height],
-                    width: width,
-                    height: height,
-                    align: element.text_box_align,
-                    valign: element.text_box_valign,
-                    overflow: element.text_box_overflow,
-                    min_font_size: 5,
-                    single_line: element.multiline == 0,
-                    character_spacing: element.text_box_character_spacing,
-                    direction: element.text_box_text_direction,
-                  }
+                    text_box_args = {
+                      # at: [0, text_offset_y],
+                      at: [0, height],
+                      width: width,
+                      height: height,
+                      align: element.text_box_align,
+                      valign: element.text_box_valign,
+                      overflow: element.text_box_overflow,
+                      min_font_size: 5,
+                      single_line: element.multiline == 0,
+                      character_spacing: element.text_box_character_spacing,
+                      direction: element.text_box_text_direction,
+                    }
 
-                  text_options = { text: value }
+                    text_options = { text: value }
 
-                  if element.text_box_strikethrough
-                    text_options[:styles] = [:strikethrough]
-                  end
+                    if element.text_box_strikethrough
+                      text_options[:styles] = [:strikethrough]
+                    end
 
-                  formatted_text_array = [text_options]
+                    formatted_text_array = [text_options]
 
-                  begin
-                    document.formatted_text_box(
-                      formatted_text_array,
-                      text_box_args
-                    )
-                  rescue Prawn::Errors::CannotFit
-                    document.draw_text value, at: [0, height], direction: text_direction
-                  end
+                    begin
+                      document.formatted_text_box(
+                        formatted_text_array,
+                        text_box_args
+                      )
+                    rescue Prawn::Errors::CannotFit
+                      document.draw_text value, at: [0, height], direction: text_direction
+                    end
+                end
               end
             end
+            document.add_content 'EMC'
           end
-          document.add_content 'EMC'
         end
       end
+
+      # Fall back to original manual stream for other languages.
+      # It doesn't handle fonts properly, but most PDF readers seem to handle these PDFs fine,
+      # and it doesn't crash with any errors.
+      # TODO: Migrate to HexaPDF
+      stream_dict = {
+        BBox: [0, 0, width, height],
+        FormType: 1,
+        Matrix: xobject_matrix(width, height),
+        Type: :XObject,
+        Subtype: :Form,
+        Resources: {
+          ProcSet: %i[PDF Text],
+          Font: { text_style.font_identifier => font_ref }
+        }
+      }
+
+      stream_ref = document.ref!(stream_dict)
+      document.acroform.add_resources(stream_ref.data[:Resources])
+
+      stream_ref.stream << %(
+/Tx BMC
+q
+1 1 #{width - 2} #{height - 2} re
+W
+n
+BT
+#{text_style.to_s}
+2 #{vertical_offset} Td
+(#{value}) Tj
+ET
+Q
+EMC
+      )
+      stream_ref
+
     end
 
     protected
