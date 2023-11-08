@@ -447,7 +447,7 @@ Q
                         text_box_args
                       )
                     rescue Prawn::Errors::CannotFit
-                      document.draw_text value, at: [0, height], direction: text_direction
+                      document.draw_text value, at: [0, height], direction: element.text_box_text_direction
                     end
                 end
               end
