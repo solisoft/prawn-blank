@@ -5,7 +5,7 @@ class Prawn::Blank::Checkbox < Prawn::Blank::Field
 
   def initialize(id, *_args)
     super
-    @check_string = '&#10004;'
+    @check_string ||= '✔'
   end
 
   def checked

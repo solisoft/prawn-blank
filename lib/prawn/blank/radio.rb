@@ -37,7 +37,7 @@ module Prawn::Blank
         # and uses ZaDB (ZapfDingBats) for its font. Using '4', which corresponds to
         # checkmark for that font would render the radio button as a checkmark
         @data[:MK] = @data[:MK] || {}
-        @data[:MK][:CA] = PDF::Core::LiteralString.new('4')
+        @data[:MK][:CA] = PDF::Core::LiteralString.new(check_zapf_char)
       end
 
       nil

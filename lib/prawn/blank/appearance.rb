@@ -199,7 +199,7 @@ BT
 #{tdx.round(4)} #{tdy.round(4)} Td
 #{fontsize_b.round(4)} TL
 0 0 Td
-(4) Tj
+(#{element.check_zapf_char}) Tj
 ET
 Q
       )
